@@ -1,5 +1,7 @@
 import React from 'react';
+// eslint-disable-next-line import/no-unresolved, import/extensions
 import ReactAddons from 'react/addons';
+// eslint-disable-next-line import/no-unresolved, import/extensions
 import ReactContext from 'react/lib/ReactContext';
 import PropTypes from 'prop-types';
 import values from 'object.values';

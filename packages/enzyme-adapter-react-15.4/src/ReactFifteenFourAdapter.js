@@ -4,14 +4,14 @@ import ReactDOMServer from 'react-dom/server';
 import TestUtils from 'react-addons-test-utils';
 import PropTypes from 'prop-types';
 import values from 'object.values';
-import EnzymeAdapter from './EnzymeAdapter';
-import elementToTree from './elementToTree';
+import { EnzymeAdapter } from 'enzyme';
 import {
+  elementToTree,
   mapNativeEventNames,
   propFromEvent,
   withSetStateAllowed,
   assertDomAvailable,
-} from './Utils';
+} from 'enzyme-adapter-utils';
 
 function compositeTypeToNodeType(type) {
   switch (type) {

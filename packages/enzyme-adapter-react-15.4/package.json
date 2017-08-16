@@ -38,6 +38,7 @@
   "peerDependencies": {
     "enzyme": "2.9.1",
     "react": "15.0.0-0 - 15.4.x",
+    "react-addons-test-utils": "15.0.0-0 - 15.4.x",
     "react-dom": "15.0.0-0 - 15.4.x"
   },
   "devDependencies": {
