@@ -19,7 +19,7 @@
     "test:only": "mocha --recursive packages/enzyme-test-suite/test",
     "test:single": "mocha --watch",
     "test:watch": "mocha --recursive --watch packages/enzyme-test-suite/test",
-    "test:karma": "karma start",
+    "test:karma": "npm run build && karma start",
     "test:env": "sh ./example-test.sh",
     "test:all": "npm run react:13 && npm run test:only && npm run react:14 && npm run test:only && npm run react:15.4 && npm run test:only && npm run react:15 && npm run test:only && npm run react:16 && npm run test:only",
     "react:13": "npm run env -- 13",
