@@ -1,0 +1,123 @@
+// This file needs to run on all node versions we support, so we will be writing in ES5
+var path = require('path');
+var fs = require('fs');
+var child_process = require('child_process');
+var rimraf = require('rimraf');
+
+const promisify = fn => new Promise((res, rej) => {
+  const done = (err, val) => (err ? rej(err) : res(val));
+  fn(done);
+});
+const getJSON = fpath => getFile(fpath).then(json => JSON.parse(json));
+const getFile = fpath => promisify(cb => fs.readFile(fpath, 'utf8', cb));
+const getFiles = fpath => promisify(cb => fs.readdir(fpath, cb));
+const writeFile = (fpath, src) => promisify(cb => fs.writeFile(fpath, src, cb));
+const writeJSON = (fpath, json, pretty = false) => writeFile(
+  fpath,
+  pretty
+    ? JSON.stringify(json, null, 2)
+    : JSON.stringify(json)
+);
+const primraf = path => promisify(cb => rimraf(path, cb));
+const run = cmd => promisify(cb => child_process.exec(cmd, cb));
+
+// This script is executed with a single argument, indicating the version of
+// react and adapters etc. that we want to set ourselves up for testing.
+// should be "14" for "enzyme-adapter-react-14", "15.4" for "enzyme-adapter-react-15.4", etc.
+var version = process.argv[2];
+
+// This script will do the following:
+//
+// 1. remove / uninstall all relevant modules
+// 2. find the adapter for the passed in version
+// 3. get the package.json for the adapter
+// 4. add the adapter to the dev-deps for enzyme-test-suite package
+// 5. call lerna bootstrap to link all the packages
+// 6. install all of the package's peer deps at the top level
+
+var root = process.cwd();
+var adapterName = 'enzyme-adapter-react-' + version;
+var adapterPackageJsonPath = path.join(root, 'packages', adapterName, 'package.json');
+var testPackageJsonPath = path.join(root, 'packages', 'enzyme-test-suite', 'package.json');
+
+if (!fs.statSync(adapterPackageJsonPath)) {
+  throw new Error('Adapter not found: "' + adapterName + '"');
+}
+
+
+/*
+"clean-local-npm": "
+  rimraf node_modules/.bin/npm node_modules/.bin/npm.cmd",
+"react:clean": "
+  npm run clean-local-npm &&
+  rimraf
+    node_modules/react
+    node_modules/react-dom
+    node_modules/react-addons-test-utils
+    node_modules/react-test-renderer
+    node_modules/create-react-class
+    &&
+  npm prune",
+"react:13": "
+  npm run react:clean &&
+  npm install &&
+  npm i --no-save react@0.13",
+"react:14": "npm run react:clean && npm install && npm i --no-save react@0.14 react-dom@0.14 react-addons-test-utils@0.14",
+"react:15.4": "npm run react:clean && npm install && npm i --no-save react@15.4 react-dom@15.4 react-addons-test-utils@15.4",
+"react:15": "npm run react:clean && npm install && npm i --no-save react@15 react-dom@15 create-react-class@15 react-test-renderer@^15.5.4",
+"react:16": "npm run react:clean && npm install && npm i --no-save react@^16.0.0-0 react-dom@^16.0.0-0 create-react-class@^15.6.0 react-test-renderer@^16.0.0-0",
+*/
+
+const packagesToRemove = [
+  'react',
+  'react-dom',
+  'react-addons-test-utils',
+  'react-test-renderer',
+  'create-react-class',
+].map(s => `./node_modules/${s}`);
+
+const additionalDirsToRemove = [
+  'node_modules/.bin/npm',
+  'node_modules/.bin/npm.cmd',
+];
+
+const rmrfArgs = []
+  .concat(packagesToRemove)
+  .concat(additionalDirsToRemove)
+  .join(' ');
+
+Promise.resolve()
+  .then(() => primraf(rmrfArgs))
+  .then(() => run('npm i'))
+  .then(() => Promise.all([
+    getJSON(adapterPackageJsonPath),
+    getJSON(testPackageJsonPath),
+  ]))
+  .then(([adapterJson, testJson]) => {
+    const peerDeps = adapterJson.peerDependencies;
+    const installs = Object.keys(peerDeps)
+      .filter(key => !key.startsWith('enzyme'))
+      .map(key => `${key}@${peerDeps[key]}`)
+      .join(' ');
+
+    testJson.dependencies[adapterName] = adapterJson.version;
+
+    return Promise.all([
+      // npm install the peer deps at the root
+      run(`npm i --no-save ${installs}`),
+
+      // add the adapter to the dependencies of the test suite
+      writeJSON(testPackageJsonPath, testJson, true),
+    ]);
+  })
+  .then(() => run('lerna bootstrap'))
+  .then(() => getJSON(testPackageJsonPath))
+  .then(testJson => {
+    // now that we've lerna bootstrapped, we can remove the adapter from the
+    // package.json so there is no diff
+    delete testJson.dependencies[adapterName];
+    return writeJSON(testPackageJsonPath, testJson, true);
+  })
+  .catch(err => console.error(err));
+
+

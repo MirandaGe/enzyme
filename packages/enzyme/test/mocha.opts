@@ -1,3 +1,0 @@
---require withDom.js ./test/_helpers/setupAdapters.js
---compilers js:babel-core/register,jsx:babel-core/register
---extensions js,jsx

@@ -1,5 +1,6 @@
 import ReactWrapper from './ReactWrapper';
 import ShallowWrapper from './ShallowWrapper';
+import EnzymeAdapter from './EnzymeAdapter';
 
 import mount from './mount';
 import shallow from './shallow';
@@ -13,4 +14,5 @@ module.exports = {
   ShallowWrapper,
   ReactWrapper,
   configure,
+  EnzymeAdapter,
 };

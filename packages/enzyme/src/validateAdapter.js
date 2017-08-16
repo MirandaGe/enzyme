@@ -1,4 +1,4 @@
-import EnzymeAdapter from './adapters/EnzymeAdapter';
+import EnzymeAdapter from './EnzymeAdapter';
 
 export default function validateAdapter(adapter) {
   if (!adapter) {
