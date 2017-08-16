@@ -1,8 +1,7 @@
-// This file needs to run on all node versions we support, so we will be writing in ES5
-var path = require('path');
-var fs = require('fs');
-var child_process = require('child_process');
-var rimraf = require('rimraf');
+const path = require('path');
+const fs = require('fs');
+const child_process = require('child_process');
+const rimraf = require('rimraf');
 
 const promisify = fn => new Promise((res, rej) => {
   const done = (err, val) => (err ? rej(err) : res(val));
@@ -24,7 +23,7 @@ const run = cmd => promisify(cb => child_process.exec(cmd, cb));
 // This script is executed with a single argument, indicating the version of
 // react and adapters etc. that we want to set ourselves up for testing.
 // should be "14" for "enzyme-adapter-react-14", "15.4" for "enzyme-adapter-react-15.4", etc.
-var version = process.argv[2];
+const version = process.argv[2];
 
 // This script will do the following:
 //
@@ -43,30 +42,6 @@ var testPackageJsonPath = path.join(root, 'packages', 'enzyme-test-suite', 'pack
 if (!fs.statSync(adapterPackageJsonPath)) {
   throw new Error('Adapter not found: "' + adapterName + '"');
 }
-
-
-/*
-"clean-local-npm": "
-  rimraf node_modules/.bin/npm node_modules/.bin/npm.cmd",
-"react:clean": "
-  npm run clean-local-npm &&
-  rimraf
-    node_modules/react
-    node_modules/react-dom
-    node_modules/react-addons-test-utils
-    node_modules/react-test-renderer
-    node_modules/create-react-class
-    &&
-  npm prune",
-"react:13": "
-  npm run react:clean &&
-  npm install &&
-  npm i --no-save react@0.13",
-"react:14": "npm run react:clean && npm install && npm i --no-save react@0.14 react-dom@0.14 react-addons-test-utils@0.14",
-"react:15.4": "npm run react:clean && npm install && npm i --no-save react@15.4 react-dom@15.4 react-addons-test-utils@15.4",
-"react:15": "npm run react:clean && npm install && npm i --no-save react@15 react-dom@15 create-react-class@15 react-test-renderer@^15.5.4",
-"react:16": "npm run react:clean && npm install && npm i --no-save react@^16.0.0-0 react-dom@^16.0.0-0 create-react-class@^15.6.0 react-test-renderer@^16.0.0-0",
-*/
 
 const packagesToRemove = [
   'react',
@@ -119,5 +94,3 @@ Promise.resolve()
     return writeJSON(testPackageJsonPath, testJson, true);
   })
   .catch(err => console.error(err));
-
-
